@@ -1,8 +1,22 @@
+/assets/*.js
+  Content-Type: text/javascript
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*.mjs
+  Content-Type: text/javascript
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*.css
+  Content-Type: text/css
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.js
+  Content-Type: text/javascript
+
+/*.mjs
+  Content-Type: text/javascript
+
 /*
   X-Frame-Options: DENY
-  X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=*, microphone=()
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable

@@ -101,9 +101,14 @@ export enum AsymmetryLevel {
 }
 
 /**
- * MediaPipe Poseのランドマークインデックス
+ * MediaPipe Poseのランドマークインデックス（全33点）
+ * 
+ * 注意: 肩のランドマーク（11, 12）は肩関節を指しており、
+ * 肩峰（acromion）専用のランドマークは存在しません。
+ * 肩峰が必要な場合は、耳・肩・肘の位置関係から推定する必要があります。
  */
 export const POSE_LANDMARKS = {
+  // 顔
   NOSE: 0,
   LEFT_EYE_INNER: 1,
   LEFT_EYE: 2,
@@ -115,10 +120,30 @@ export const POSE_LANDMARKS = {
   RIGHT_EAR: 8,
   MOUTH_LEFT: 9,
   MOUTH_RIGHT: 10,
-  LEFT_SHOULDER: 11,
-  RIGHT_SHOULDER: 12,
+  
+  // 上半身（肩・腕・手）
+  LEFT_SHOULDER: 11,    // 左肩関節（肩峰ではない）
+  RIGHT_SHOULDER: 12,   // 右肩関節（肩峰ではない）
   LEFT_ELBOW: 13,
   RIGHT_ELBOW: 14,
   LEFT_WRIST: 15,
   RIGHT_WRIST: 16,
+  LEFT_PINKY: 17,
+  RIGHT_PINKY: 18,
+  LEFT_INDEX: 19,
+  RIGHT_INDEX: 20,
+  LEFT_THUMB: 21,
+  RIGHT_THUMB: 22,
+  
+  // 下半身（腰・脚・足）
+  LEFT_HIP: 23,
+  RIGHT_HIP: 24,
+  LEFT_KNEE: 25,
+  RIGHT_KNEE: 26,
+  LEFT_ANKLE: 27,
+  RIGHT_ANKLE: 28,
+  LEFT_HEEL: 29,
+  RIGHT_HEEL: 30,
+  LEFT_FOOT_INDEX: 31,
+  RIGHT_FOOT_INDEX: 32,
 } as const;

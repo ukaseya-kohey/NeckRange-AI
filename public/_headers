@@ -1,22 +1,14 @@
-/assets/*.js
-  Content-Type: text/javascript
+https://:project.pages.dev/*
+  X-Content-Type-Options: nosniff
+
+https://:project.pages.dev/assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/assets/*.mjs
-  Content-Type: text/javascript
-  Cache-Control: public, max-age=31536000, immutable
+https://:project.pages.dev/assets/*.js
+  Content-Type: application/javascript; charset=utf-8
 
-/assets/*.css
-  Content-Type: text/css
-  Cache-Control: public, max-age=31536000, immutable
+https://:project.pages.dev/assets/*.mjs  
+  Content-Type: application/javascript; charset=utf-8
 
-/*.js
-  Content-Type: text/javascript
-
-/*.mjs
-  Content-Type: text/javascript
-
-/*
-  X-Frame-Options: DENY
-  Referrer-Policy: no-referrer
-  Permissions-Policy: camera=*, microphone=()
+https://:project.pages.dev/assets/*.css
+  Content-Type: text/css; charset=utf-8

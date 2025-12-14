@@ -60,14 +60,14 @@ export function usePoseDetection({ onResults }: UsePoseDetectionProps = {}): Use
           }
         });
 
-        // オプションを設定
+        // オプションを設定（精度向上のため最適化）
         poseInstance.setOptions({
-          modelComplexity: 1,
-          smoothLandmarks: true,
-          enableSegmentation: false,
+          modelComplexity: 2,              // 2: 最高精度モデル（1→2に変更）
+          smoothLandmarks: true,            // スムージング有効
+          enableSegmentation: false,        // セグメンテーション無効（高速化）
           smoothSegmentation: false,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5
+          minDetectionConfidence: 0.7,      // 検出信頼度を70%に引き上げ（0.5→0.7）
+          minTrackingConfidence: 0.7        // トラッキング信頼度を70%に引き上げ（0.5→0.7）
         });
 
         // 結果のコールバックを設定

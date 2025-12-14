@@ -1,4 +1,5 @@
 import { Landmark, POSE_LANDMARKS } from '../types/pose';
+import { stabilizeShoulders } from './landmarkUtils';
 
 /**
  * 2点間の角度を計算（ラジアンから度へ変換）
@@ -32,20 +33,25 @@ export function calculateShoulderAngle(landmarks: Landmark[]): number {
     throw new Error('肩のランドマークが検出されませんでした');
   }
 
+  // 肩のランドマークを安定化（対称性を利用して水平に近づける）
+  const stabilized = stabilizeShoulders(leftShoulder, rightShoulder);
+
   // 左右の肩の座標差を計算
-  const dx = Math.abs(leftShoulder.x - rightShoulder.x);
-  const dy = leftShoulder.y - rightShoulder.y;
+  const dx = Math.abs(stabilized.left.x - stabilized.right.x);
+  const dy = stabilized.left.y - stabilized.right.y;
 
   // デバッグログ
-  console.log('Shoulder coordinates:', {
+  console.log('Shoulder coordinates (original):', {
     left: { x: leftShoulder.x, y: leftShoulder.y },
-    right: { x: rightShoulder.x, y: rightShoulder.y },
+    right: { x: rightShoulder.x, y: rightShoulder.y }
+  });
+  console.log('Shoulder coordinates (stabilized):', {
+    left: { x: stabilized.left.x, y: stabilized.left.y },
+    right: { x: stabilized.right.x, y: stabilized.right.y },
     dx, dy
   });
 
-  // Y座標の差から傾きを計算（シンプルな方法）
-  // 小さな角度の場合、tan(θ) ≈ θ なので dy/dx で十分
-  // ただし、より正確にするため atan を使用
+  // Y座標の差から傾きを計算
   const radians = Math.atan(dy / dx);
   const degrees = radians * (180 / Math.PI);
 
@@ -71,9 +77,12 @@ export function calculateNeckTiltAngle(landmarks: Landmark[]): number {
     throw new Error('必要なランドマークが検出されませんでした');
   }
 
-  // 両肩の中点を計算
-  const midX = (leftShoulder.x + rightShoulder.x) / 2;
-  const midY = (leftShoulder.y + rightShoulder.y) / 2;
+  // 肩のランドマークを安定化（精度向上のため）
+  const stabilized = stabilizeShoulders(leftShoulder, rightShoulder);
+
+  // 安定化された両肩の中点を計算
+  const midX = (stabilized.left.x + stabilized.right.x) / 2;
+  const midY = (stabilized.left.y + stabilized.right.y) / 2;
 
   // 中点から鼻へのベクトルと垂直線のなす角を計算
   const dx = nose.x - midX;
@@ -82,6 +91,13 @@ export function calculateNeckTiltAngle(landmarks: Landmark[]): number {
   // atan2を使用して角度を計算（垂直線からの傾き）
   const radians = Math.atan2(dx, dy);
   const degrees = radians * (180 / Math.PI);
+
+  console.log('Neck tilt angle calculation:', {
+    midPoint: { x: midX, y: midY },
+    nose: { x: nose.x, y: nose.y },
+    dx, dy,
+    degrees
+  });
 
   return degrees;
 }

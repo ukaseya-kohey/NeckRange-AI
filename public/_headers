@@ -1,14 +1,15 @@
-https://:project.pages.dev/*
+/assets/*.js
+  Content-Type: text/javascript
   X-Content-Type-Options: nosniff
 
-https://:project.pages.dev/assets/*
-  Cache-Control: public, max-age=31536000, immutable
+/assets/*.mjs
+  Content-Type: text/javascript
+  X-Content-Type-Options: nosniff
 
-https://:project.pages.dev/assets/*.js
-  Content-Type: application/javascript; charset=utf-8
+/assets/*.css
+  Content-Type: text/css
+  X-Content-Type-Options: nosniff
 
-https://:project.pages.dev/assets/*.mjs  
-  Content-Type: application/javascript; charset=utf-8
-
-https://:project.pages.dev/assets/*.css
-  Content-Type: text/css; charset=utf-8
+/*
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer

@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "deploy": "npm run build && echo 'Build complete. Upload dist/ folder to Cloudflare Pages.'"
+    "deploy": "npm run build && echo 'Build complete. Ready for Vercel deployment.'"
   },
   "dependencies": {
     "@mediapipe/pose": "^0.5.1675469404",

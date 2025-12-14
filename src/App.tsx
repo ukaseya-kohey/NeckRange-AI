@@ -78,7 +78,8 @@ function App() {
     const right = images.find(img => img.type === ImageType.RIGHT_TILT);
     const left = images.find(img => img.type === ImageType.LEFT_TILT);
 
-    if (!neutral?.angle || !right?.angle || !left?.angle) {
+    if (!neutral?.angle || !right?.angle || !left?.angle ||
+        !neutral?.landmarks || !right?.landmarks || !left?.landmarks) {
       setError('角度データが不足しています');
       return;
     }
@@ -111,6 +112,25 @@ function App() {
       asymmetry,
       asymmetryDiff,
       recommendations,
+      // 画像データを含める
+      neutralImage: {
+        type: neutral.type,
+        url: neutral.url,
+        landmarks: neutral.landmarks,
+        angle: neutral.angle
+      },
+      rightImage: {
+        type: right.type,
+        url: right.url,
+        landmarks: right.landmarks,
+        angle: right.angle
+      },
+      leftImage: {
+        type: left.type,
+        url: left.url,
+        landmarks: left.landmarks,
+        angle: left.angle
+      }
     };
 
     setDiagnosisResult(result);

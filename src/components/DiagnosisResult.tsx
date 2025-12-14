@@ -1,16 +1,68 @@
-import React from 'react';
-import { DiagnosisResult as DiagnosisResultType } from '../types/pose';
+import React, { useEffect, useRef } from 'react';
+import { DiagnosisResult as DiagnosisResultType, CapturedImageData } from '../types/pose';
 import {
   getFlexibilityLabel,
   getFlexibilityColor,
   getAsymmetryLabel,
   getAsymmetryColor,
 } from '../utils/validationUtils';
+import {
+  drawLandmarks,
+  drawSkeleton,
+  drawShoulderLine,
+  drawNeckAngleLine,
+} from '../utils/drawingUtils';
 
 interface DiagnosisResultProps {
   result: DiagnosisResultType;
   onReset: () => void;
 }
+
+/**
+ * 画像に骨格と角度の線を描画するコンポーネント
+ */
+const AnnotatedImage: React.FC<{ imageData: CapturedImageData; title: string }> = ({ imageData, title }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      // キャンバスサイズを画像に合わせる
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      // 画像を描画
+      ctx.drawImage(img, 0, 0);
+
+      // 骨格を描画
+      drawSkeleton(ctx, imageData.landmarks, canvas.width, canvas.height);
+      drawLandmarks(ctx, imageData.landmarks, canvas.width, canvas.height);
+
+      // 肩の線を描画（緑色で水平を示す）
+      drawShoulderLine(ctx, imageData.landmarks, canvas.width, canvas.height, true);
+
+      // 首の角度線を描画
+      drawNeckAngleLine(ctx, imageData.landmarks, canvas.width, canvas.height, imageData.angle);
+    };
+
+    img.src = imageData.url;
+  }, [imageData]);
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="bg-gray-800 text-white px-4 py-2 font-semibold text-center">
+        {title}
+      </div>
+      <canvas ref={canvasRef} className="w-full h-auto" />
+    </div>
+  );
+};
 
 export const DiagnosisResult: React.FC<DiagnosisResultProps> = ({ result, onReset }) => {
   return (
@@ -79,6 +131,28 @@ export const DiagnosisResult: React.FC<DiagnosisResultProps> = ({ result, onRese
           </div>
         </div>
       </div>
+
+      {/* 画像解析結果 */}
+      {result.neutralImage && result.rightImage && result.leftImage && (
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">📸 解析画像</h3>
+          <div className="grid md:grid-cols-3 gap-4">
+            <AnnotatedImage imageData={result.neutralImage} title="正面（中心）" />
+            <AnnotatedImage imageData={result.rightImage} title="右側屈" />
+            <AnnotatedImage imageData={result.leftImage} title="左側屈" />
+          </div>
+          <div className="mt-4 bg-blue-50 rounded-lg p-4">
+            <p className="text-sm text-gray-700 text-center">
+              <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+              緑色：骨格とランドマーク
+              <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full ml-4 mr-2"></span>
+              黄色：首の傾き角度線
+              <span className="inline-block w-3 h-3 bg-white border border-gray-400 rounded-full ml-4 mr-2"></span>
+              白色：垂直基準線
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 柔軟性の基準表 */}
       <div className="bg-gray-50 rounded-lg p-6 mb-8">

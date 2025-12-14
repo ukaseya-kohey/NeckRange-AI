@@ -53,6 +53,16 @@ export interface NeckAngle {
 }
 
 /**
+ * キャプチャされた画像情報
+ */
+export interface CapturedImageData {
+  type: ImageType;
+  url: string;
+  landmarks: Landmark[];
+  angle: number;
+}
+
+/**
  * 診断結果
  */
 export interface DiagnosisResult {
@@ -64,6 +74,10 @@ export interface DiagnosisResult {
   asymmetry: AsymmetryLevel;
   asymmetryDiff: number;
   recommendations: string[];
+  // 画像データ
+  neutralImage?: CapturedImageData;
+  rightImage?: CapturedImageData;
+  leftImage?: CapturedImageData;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Landmark, POSE_LANDMARKS } from '../types/pose';
-import { stabilizeShoulders } from './landmarkUtils';
+import { stabilizeShoulders, estimateAcromion } from './landmarkUtils';
 
 /**
  * 2点間の角度を計算（ラジアンから度へ変換）
@@ -26,26 +26,34 @@ export function calculateAngle(x1: number, y1: number, x2: number, y2: number): 
  *          0：完全に水平
  */
 export function calculateShoulderAngle(landmarks: Landmark[]): number {
-  const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
-  const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+  // 肩峰の位置を推定
+  const leftAcromion = estimateAcromion(landmarks, 'left');
+  const rightAcromion = estimateAcromion(landmarks, 'right');
 
-  if (!leftShoulder || !rightShoulder) {
-    throw new Error('肩のランドマークが検出されませんでした');
+  if (!leftAcromion || !rightAcromion) {
+    throw new Error('肩峰の推定に失敗しました');
   }
 
-  // 肩のランドマークを安定化（対称性を利用して水平に近づける）
-  const stabilized = stabilizeShoulders(leftShoulder, rightShoulder);
+  // 肩峰のランドマークを安定化（対称性を利用して水平に近づける）
+  const stabilized = stabilizeShoulders(leftAcromion, rightAcromion);
 
-  // 左右の肩の座標差を計算
+  // 左右の肩峰の座標差を計算
   const dx = Math.abs(stabilized.left.x - stabilized.right.x);
   const dy = stabilized.left.y - stabilized.right.y;
 
   // デバッグログ
-  console.log('Shoulder coordinates (original):', {
-    left: { x: leftShoulder.x, y: leftShoulder.y },
-    right: { x: rightShoulder.x, y: rightShoulder.y }
+  const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
+  const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+  
+  console.log('Shoulder landmarks (original):', {
+    left: { x: leftShoulder?.x, y: leftShoulder?.y },
+    right: { x: rightShoulder?.x, y: rightShoulder?.y }
   });
-  console.log('Shoulder coordinates (stabilized):', {
+  console.log('Acromion (estimated):', {
+    left: { x: leftAcromion.x, y: leftAcromion.y },
+    right: { x: rightAcromion.x, y: rightAcromion.y }
+  });
+  console.log('Acromion (stabilized):', {
     left: { x: stabilized.left.x, y: stabilized.left.y },
     right: { x: stabilized.right.x, y: stabilized.right.y },
     dx, dy
@@ -69,31 +77,32 @@ export function calculateShoulderAngle(landmarks: Landmark[]): number {
  * @returns 首の傾き角度（度）正の値は右傾き、負の値は左傾き
  */
 export function calculateNeckTiltAngle(landmarks: Landmark[]): number {
-  const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
-  const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+  // 肩峰の位置を推定
+  const leftAcromion = estimateAcromion(landmarks, 'left');
+  const rightAcromion = estimateAcromion(landmarks, 'right');
   const nose = landmarks[POSE_LANDMARKS.NOSE];
 
-  if (!leftShoulder || !rightShoulder || !nose) {
+  if (!leftAcromion || !rightAcromion || !nose) {
     throw new Error('必要なランドマークが検出されませんでした');
   }
 
-  // 肩のランドマークを安定化（精度向上のため）
-  const stabilized = stabilizeShoulders(leftShoulder, rightShoulder);
+  // 肩峰のランドマークを安定化（精度向上のため）
+  const stabilized = stabilizeShoulders(leftAcromion, rightAcromion);
 
-  // 安定化された両肩の中点を計算
-  const midX = (stabilized.left.x + stabilized.right.x) / 2;
-  const midY = (stabilized.left.y + stabilized.right.y) / 2;
+  // 安定化された両肩峰の中点を計算（胸の中心）
+  const chestCenterX = (stabilized.left.x + stabilized.right.x) / 2;
+  const chestCenterY = (stabilized.left.y + stabilized.right.y) / 2;
 
-  // 中点から鼻へのベクトルと垂直線のなす角を計算
-  const dx = nose.x - midX;
-  const dy = midY - nose.y; // Y軸は下向きなので反転
+  // 胸の中心から鼻へのベクトルと垂直線のなす角を計算
+  const dx = nose.x - chestCenterX;
+  const dy = chestCenterY - nose.y; // Y軸は下向きなので反転
 
   // atan2を使用して角度を計算（垂直線からの傾き）
   const radians = Math.atan2(dx, dy);
   const degrees = radians * (180 / Math.PI);
 
-  console.log('Neck tilt angle calculation:', {
-    midPoint: { x: midX, y: midY },
+  console.log('Neck tilt angle calculation (using acromion):', {
+    chestCenter: { x: chestCenterX, y: chestCenterY },
     nose: { x: nose.x, y: nose.y },
     dx, dy,
     degrees

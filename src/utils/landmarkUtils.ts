@@ -118,3 +118,66 @@ export function smoothLandmarks(
     smoothLandmark(landmark, previousLandmarks[index], alpha)
   );
 }
+
+/**
+ * 肩峰（acromion）の位置を推定
+ * 
+ * MediaPipe Poseには肩峰専用のランドマークがないため、
+ * 耳、肩、肘の位置関係から肩峰を推定する
+ * 
+ * @param landmarks - MediaPipeのランドマーク配列
+ * @param side - 'left' または 'right'
+ * @returns 推定された肩峰の位置
+ */
+export function estimateAcromion(
+  landmarks: Landmark[],
+  side: 'left' | 'right'
+): Landmark {
+  // MediaPipe Poseのランドマークインデックス
+  const POSE_LANDMARKS = {
+    LEFT_EAR: 7,
+    RIGHT_EAR: 8,
+    LEFT_SHOULDER: 11,
+    RIGHT_SHOULDER: 12,
+    LEFT_ELBOW: 13,
+    RIGHT_ELBOW: 14,
+  };
+
+  const ear = landmarks[side === 'left' ? POSE_LANDMARKS.LEFT_EAR : POSE_LANDMARKS.RIGHT_EAR];
+  const shoulder = landmarks[side === 'left' ? POSE_LANDMARKS.LEFT_SHOULDER : POSE_LANDMARKS.RIGHT_SHOULDER];
+  const elbow = landmarks[side === 'left' ? POSE_LANDMARKS.LEFT_ELBOW : POSE_LANDMARKS.RIGHT_ELBOW];
+
+  if (!ear || !shoulder || !elbow) {
+    // フォールバック：肩のランドマークをそのまま使用
+    return shoulder || { x: 0, y: 0, z: 0 };
+  }
+
+  // 肩峰の推定ロジック：
+  // 1. X座標：耳のX座標から肩の方向へオフセット（体の外側）
+  // 2. Y座標：肩と耳の中間（少し上）
+  // 3. Z座標：肩のZ座標を使用
+
+  const earToShoulderX = shoulder.x - ear.x;
+  const earToShoulderY = shoulder.y - ear.y;
+  
+  // 肩峰は耳から肩への方向に、耳からの距離の約70%の位置
+  const acromionOffsetRatio = 0.7;
+  
+  const acromionX = ear.x + earToShoulderX * acromionOffsetRatio;
+  const acromionY = ear.y + earToShoulderY * acromionOffsetRatio;
+
+  // さらに、肩から肘への方向を考慮して、より外側に補正
+  const shoulderToElbowX = elbow.x - shoulder.x;
+  const lateralOffset = Math.abs(shoulderToElbowX) * 0.15; // 肩幅の15%外側
+  
+  const finalX = side === 'left' 
+    ? acromionX - lateralOffset  // 左肩峰：より左（外側）へ
+    : acromionX + lateralOffset; // 右肩峰：より右（外側）へ
+
+  return {
+    x: finalX,
+    y: acromionY,
+    z: shoulder.z,
+    visibility: Math.min(ear.visibility || 1, shoulder.visibility || 1)
+  };
+}

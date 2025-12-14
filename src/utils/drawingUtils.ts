@@ -1,4 +1,5 @@
 import { Landmark, POSE_LANDMARKS } from '../types/pose';
+import { estimateAcromion } from './landmarkUtils';
 
 /**
  * Canvas上にランドマークを描画
@@ -94,18 +95,19 @@ export function drawShoulderLine(
   height: number,
   isValid: boolean
 ): void {
-  const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
-  const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+  // 肩峰の位置を推定
+  const leftAcromion = estimateAcromion(landmarks, 'left');
+  const rightAcromion = estimateAcromion(landmarks, 'right');
 
-  if (!leftShoulder || !rightShoulder) return;
+  if (!leftAcromion || !rightAcromion) return;
 
   ctx.strokeStyle = isValid ? '#00ff00' : '#ff0000';
   ctx.lineWidth = 3;
   ctx.setLineDash([5, 5]);
 
   ctx.beginPath();
-  ctx.moveTo(leftShoulder.x * width, leftShoulder.y * height);
-  ctx.lineTo(rightShoulder.x * width, rightShoulder.y * height);
+  ctx.moveTo(leftAcromion.x * width, leftAcromion.y * height);
+  ctx.lineTo(rightAcromion.x * width, rightAcromion.y * height);
   ctx.stroke();
 
   ctx.setLineDash([]);
@@ -127,23 +129,24 @@ export function drawNeckAngleLine(
   height: number,
   angle: number
 ): void {
-  const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
-  const rightShoulder = landmarks[POSE_LANDMARKS.RIGHT_SHOULDER];
+  // 肩峰の位置を推定
+  const leftAcromion = estimateAcromion(landmarks, 'left');
+  const rightAcromion = estimateAcromion(landmarks, 'right');
   const nose = landmarks[POSE_LANDMARKS.NOSE];
 
-  if (!leftShoulder || !rightShoulder || !nose) return;
+  if (!leftAcromion || !rightAcromion || !nose) return;
 
-  // 両肩の中点を計算
-  const midX = ((leftShoulder.x + rightShoulder.x) / 2) * width;
-  const midY = ((leftShoulder.y + rightShoulder.y) / 2) * height;
+  // 両肩峰の中点を計算（胸の中心）
+  const chestCenterX = ((leftAcromion.x + rightAcromion.x) / 2) * width;
+  const chestCenterY = ((leftAcromion.y + rightAcromion.y) / 2) * height;
   const noseX = nose.x * width;
   const noseY = nose.y * height;
 
-  // 中点から鼻への線を描画
+  // 胸の中心から鼻への線を描画
   ctx.strokeStyle = '#ffff00';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(midX, midY);
+  ctx.moveTo(chestCenterX, chestCenterY);
   ctx.lineTo(noseX, noseY);
   ctx.stroke();
 
@@ -152,15 +155,15 @@ export function drawNeckAngleLine(
   ctx.lineWidth = 2;
   ctx.setLineDash([10, 10]);
   ctx.beginPath();
-  ctx.moveTo(midX, midY);
-  ctx.lineTo(midX, midY - 100);
+  ctx.moveTo(chestCenterX, chestCenterY);
+  ctx.lineTo(chestCenterX, chestCenterY - 100);
   ctx.stroke();
   ctx.setLineDash([]);
 
   // 角度テキストを描画
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 20px Arial';
-  ctx.fillText(`${angle.toFixed(1)}°`, midX + 10, midY - 50);
+  ctx.fillText(`${angle.toFixed(1)}°`, chestCenterX + 10, chestCenterY - 50);
 }
 
 /**

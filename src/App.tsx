@@ -195,7 +195,10 @@ function App() {
                 <p className="text-xs md:text-sm text-gray-600">AI首可動域測定</p>
               </div>
             </div>
-
+            <div className="hidden md:flex items-center gap-2 bg-gradient-to-r from-purple-100 to-blue-100 px-4 py-2 rounded-full">
+              <div className="w-5 h-5 rounded-full bg-gradient-to-r from-purple-500 to-blue-500"></div>
+              <span className="text-sm font-semibold text-gray-700">プロ整体師レベルの診断</span>
+            </div>
           </div>
         </div>
       </header>
@@ -226,8 +229,8 @@ function App() {
                     首の可動域を<br/>AIで測定
                   </h2>
                   <p className="text-xl text-gray-600 mb-6 leading-relaxed">
-                    スマホで撮影するだけで、首の柔軟性と<br className="hidden md:block"/>
-                    左右のバランスを詳細に診断します
+                    スマホで撮影するだけで、首の柔軟性と左右のバランスを<br className="hidden md:block"/>
+                    プロの整体師レベルで診断します
                   </p>
                   <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                     <div className="flex items-center gap-2 text-gray-600">

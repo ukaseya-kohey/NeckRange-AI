@@ -172,12 +172,29 @@ export function drawNeckAngleLine(
  * @param ctx - Canvasコンテキスト
  * @param width - Canvas幅
  * @param height - Canvas高さ
+ * @param tiltAngle - 傾き角度（度）。0=正面、正の値=右傾き、負の値=左傾き
  */
 export function drawGuideline(
   ctx: CanvasRenderingContext2D,
   width: number,
-  height: number
+  height: number,
+  tiltAngle: number = 0
 ): void {
+  // 傾き角度をラジアンに変換
+  const tiltRad = (tiltAngle * Math.PI) / 180;
+  
+  // Canvas中心点
+  const centerX = width / 2;
+  const centerY = height / 2;
+  
+  // 傾きがある場合はCanvas全体を回転
+  if (tiltAngle !== 0) {
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(tiltRad);
+    ctx.translate(-centerX, -centerY);
+  }
+
   // 顔の位置ガイド（楕円）- 頭頂が画面上部に収まるよう下に配置
   const faceGuideX = width / 2;
   const faceGuideY = height * 0.40; // 0.3 → 0.40 に変更（下に移動）
@@ -259,6 +276,11 @@ export function drawGuideline(
   ctx.fillStyle = 'rgba(255, 215, 0, 1.0)';
   ctx.font = 'bold 20px Arial';
   ctx.fillText(shoulderText, textX, textY);
+  
+  // 傾きがある場合はCanvas状態を復元
+  if (tiltAngle !== 0) {
+    ctx.restore();
+  }
 }
 
 /**

@@ -54,7 +54,15 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
 
-      drawGuideline(ctx, canvas.width, canvas.height);
+      // 画像タイプに応じて傾き角度を設定
+      let tiltAngle = 0;
+      if (imageType === ImageType.RIGHT_TILT) {
+        tiltAngle = 15; // 右に15度傾ける
+      } else if (imageType === ImageType.LEFT_TILT) {
+        tiltAngle = -15; // 左に15度傾ける
+      }
+
+      drawGuideline(ctx, canvas.width, canvas.height, tiltAngle);
 
       animationId = requestAnimationFrame(drawFrame);
     };
@@ -66,7 +74,7 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
         cancelAnimationFrame(animationId);
       }
     };
-  }, [isStreaming, showGuideline]);
+  }, [isStreaming, showGuideline, imageType, videoRef]);
 
   const handleCapture = () => {
     const dataUrl = captureImage();
@@ -144,8 +152,11 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
 
           {/* ステータス表示 */}
           {!isStreaming && !error && (
-            <div className="mb-4 p-2 bg-blue-100 text-sm text-blue-700 rounded text-center">
-              ⏳ カメラを起動しています...
+            <div className="mb-4 p-2 bg-blue-100 text-sm text-blue-700 rounded text-center flex items-center justify-center gap-2">
+              <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              カメラを起動しています...
             </div>
           )}
 
@@ -153,14 +164,21 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
             <button
               onClick={handleCapture}
               disabled={!isStreaming}
-              className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors min-h-[48px]"
+              className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition-colors min-h-[48px] flex items-center justify-center gap-2"
               title={isStreaming ? '撮影する' : 'カメラ起動中...'}
             >
-              📸 撮影する
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              撮影する
             </button>
 
-            <label className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg cursor-pointer transition-colors text-center flex items-center justify-center min-h-[48px]">
-              📁 ファイルから選択
+            <label className="w-full sm:flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg cursor-pointer transition-colors text-center flex items-center justify-center gap-2 min-h-[48px]">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              ファイルから選択
               <input
                 type="file"
                 accept="image/*"
@@ -174,8 +192,11 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
                 stopCamera();
                 onCancel();
               }}
-              className="w-full sm:flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors min-h-[48px]"
+              className="w-full sm:flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors min-h-[48px] flex items-center justify-center gap-2"
             >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
               キャンセル
             </button>
           </div>

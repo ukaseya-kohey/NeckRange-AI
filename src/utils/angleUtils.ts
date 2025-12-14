@@ -16,10 +16,13 @@ export function calculateAngle(x1: number, y1: number, x2: number, y2: number): 
 
 /**
  * 肩の水平角度を計算（代償動作検知用）
- * α = arctan((y_sl - y_sr) / (x_sl - x_sr)) × 180/π
+ * 左肩と右肩のY座標の差から水平からの傾きを計算
  * 
  * @param landmarks - MediaPipeのランドマーク配列
  * @returns 肩の傾き角度（度）
+ *          正の値：右肩が下がっている（右に傾いている）
+ *          負の値：左肩が下がっている（左に傾いている）
+ *          0：完全に水平
  */
 export function calculateShoulderAngle(landmarks: Landmark[]): number {
   const leftShoulder = landmarks[POSE_LANDMARKS.LEFT_SHOULDER];
@@ -29,21 +32,25 @@ export function calculateShoulderAngle(landmarks: Landmark[]): number {
     throw new Error('肩のランドマークが検出されませんでした');
   }
 
+  // 左右の肩の座標差を計算
   const dx = leftShoulder.x - rightShoulder.x;
   const dy = leftShoulder.y - rightShoulder.y;
 
-  // atan2を使用して正確な角度を計算
+  // atan2を使用して水平線からの角度を計算
+  // dy/dxの比率から傾きを求める
   const radians = Math.atan2(dy, dx);
-  let degrees = radians * (180 / Math.PI);
+  const degrees = radians * (180 / Math.PI);
 
-  // 水平線を0度とするため、90度を引く
-  degrees = degrees - 90;
+  // 水平線を0度とするため、計算結果を調整
+  // atan2(dy, dx)は水平右向きを0度とするため、補正が必要
+  // 肩の並びは左→右なので、180度回転させて0度を水平に合わせる
+  let shoulderAngle = degrees - 180;
 
   // -180°〜180°の範囲に正規化
-  if (degrees > 180) degrees -= 360;
-  if (degrees < -180) degrees += 360;
+  if (shoulderAngle > 180) shoulderAngle -= 360;
+  if (shoulderAngle < -180) shoulderAngle += 360;
 
-  return degrees;
+  return shoulderAngle;
 }
 
 /**

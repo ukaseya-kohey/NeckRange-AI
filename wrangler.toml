@@ -2,9 +2,4 @@
 
 name = "neckrange-ai"
 compatibility_date = "2024-12-14"
-
-[site]
-bucket = "./dist"
-
-[[pages_build_output_dir]]
-build_output_dir = "dist"
+pages_build_output_dir = "dist"

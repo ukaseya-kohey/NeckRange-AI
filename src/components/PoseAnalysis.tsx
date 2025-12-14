@@ -28,10 +28,16 @@ export const PoseAnalysis: React.FC<PoseAnalysisProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const hasAnalyzedRef = useRef(false); // 処理済みフラグ
   const { processImage, isLoading: isPoseLoading } = usePoseDetection();
 
   useEffect(() => {
     const analyzeImage = async () => {
+      // 既に処理済みの場合はスキップ
+      if (hasAnalyzedRef.current) {
+        return;
+      }
+
       if (isPoseLoading) {
         console.log('Waiting for MediaPipe Pose to load...');
         return;
@@ -94,6 +100,7 @@ export const PoseAnalysis: React.FC<PoseAnalysisProps> = ({
         drawAnalysisResult(img, detectedLandmarks, true, `角度: ${neckAngle.toFixed(1)}°`);
 
         // 解析完了を通知
+        hasAnalyzedRef.current = true; // 処理済みフラグをセット
         onAnalysisComplete(detectedLandmarks, neckAngle);
       } catch (error) {
         console.error('Analysis error:', error);
@@ -108,7 +115,12 @@ export const PoseAnalysis: React.FC<PoseAnalysisProps> = ({
     };
 
     analyzeImage();
-  }, [imageUrl, imageType, isPoseLoading, processImage, onAnalysisComplete, onError]);
+  }, [imageUrl, imageType, isPoseLoading, processImage]); // onAnalysisComplete, onErrorを依存配列から除外
+
+  // imageUrlが変わったらフラグをリセット
+  useEffect(() => {
+    hasAnalyzedRef.current = false;
+  }, [imageUrl]);
 
   const drawAnalysisResult = (
     img: HTMLImageElement,

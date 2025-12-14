@@ -12,7 +12,6 @@ import {
   drawShoulderLine,
   drawNeckAngleLine,
 } from '../utils/drawingUtils';
-import { ImageOverlay } from './ImageOverlay';
 
 interface DiagnosisResultProps {
   result: DiagnosisResultType;
@@ -132,32 +131,6 @@ export const DiagnosisResult: React.FC<DiagnosisResultProps> = ({ result, onRese
           </div>
         </div>
       </div>
-
-      {/* 画像重ね合わせ比較 */}
-      {result.neutralImage && result.rightImage && result.leftImage && (
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800 text-center">🔀 画像重ね合わせ比較</h3>
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            {/* 正面 vs 右側屈 */}
-            <ImageOverlay
-              baseImage={result.neutralImage.url}
-              overlayImage={result.rightImage.url}
-              baseLabel="正面（中心）"
-              overlayLabel="右側屈"
-              title="正面 vs 右側屈"
-            />
-            
-            {/* 正面 vs 左側屈 */}
-            <ImageOverlay
-              baseImage={result.neutralImage.url}
-              overlayImage={result.leftImage.url}
-              baseLabel="正面（中心）"
-              overlayLabel="左側屈"
-              title="正面 vs 左側屈"
-            />
-          </div>
-        </div>
-      )}
 
       {/* 画像解析結果 */}
       {result.neutralImage && result.rightImage && result.leftImage && (

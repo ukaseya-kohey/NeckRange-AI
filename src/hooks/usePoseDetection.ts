@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import * as poseModule from '@mediapipe/pose';
 import { Landmark } from '../types/pose';
 
-// MediaPipe Poseの型定義
-type Pose = poseModule.Pose;
-type Results = poseModule.Results;
+// MediaPipe Poseの型定義をグローバルから取得
+declare global {
+  interface Window {
+    Pose: any;
+  }
+}
+
+type Pose = any;
+type Results = any;
 
 interface UsePoseDetectionProps {
   onResults?: (landmarks: Landmark[]) => void;
@@ -33,10 +38,23 @@ export function usePoseDetection({ onResults }: UsePoseDetectionProps = {}): Use
       try {
         setIsLoading(true);
         
+        // MediaPipe PoseをCDNから動的に読み込む
+        console.log('Loading MediaPipe Pose from CDN...');
+        if (!window.Pose) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+          console.log('MediaPipe Pose script loaded');
+        }
+        
         // MediaPipe Poseのインスタンスを作成
         console.log('Initializing MediaPipe Pose...');
-        const poseInstance = new poseModule.Pose({
-          locateFile: (file) => {
+        const poseInstance = new window.Pose({
+          locateFile: (file: string) => {
             console.log('Loading MediaPipe file:', file);
             return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
           }

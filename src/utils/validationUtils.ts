@@ -3,8 +3,10 @@ import { calculateShoulderAngle } from './angleUtils';
 
 /**
  * 代償動作の許容範囲（度）
+ * 首を側屈させた際、MediaPipe Poseの検出精度やカメラ角度により
+ * 肩の位置に±5度程度のブレが生じる可能性があるため、10度に設定
  */
-const SHOULDER_ANGLE_THRESHOLD = 5;
+const SHOULDER_ANGLE_THRESHOLD = 10;
 
 /**
  * 肩の水平を検証（代償動作の検知）

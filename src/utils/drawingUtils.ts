@@ -150,6 +150,21 @@ export function drawShoulderLine(
 
   if (!leftAcromion || !rightAcromion) return;
 
+  // 肩のY座標の平均（肩のラインの高さ）
+  const shoulderY = ((leftAcromion.y + rightAcromion.y) / 2) * height;
+  const leftX = leftAcromion.x * width;
+  const rightX = rightAcromion.x * width;
+  
+  // 水平基準線を描画（白色・破線）
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([10, 10]);
+  ctx.beginPath();
+  ctx.moveTo(Math.min(leftX, rightX) - 50, shoulderY);
+  ctx.lineTo(Math.max(leftX, rightX) + 50, shoulderY);
+  ctx.stroke();
+
+  // 肩のライン（実際の肩峰を結ぶ線）
   ctx.strokeStyle = isValid ? '#00ff00' : '#ff0000';
   ctx.lineWidth = 3;
   ctx.setLineDash([5, 5]);

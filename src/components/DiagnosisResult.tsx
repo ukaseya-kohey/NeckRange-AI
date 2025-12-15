@@ -180,11 +180,15 @@ export const DiagnosisResult: React.FC<DiagnosisResultProps> = ({ result, onRese
           <div className="mt-4 bg-blue-50 rounded-lg p-4">
             <p className="text-sm text-gray-700 text-center">
               <span className="inline-block w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-              緑色：骨格とランドマーク
-              <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full ml-4 mr-2"></span>
+              緑色：骨格とランドマーク・肩のライン（水平時）
+              <span className="inline-block w-3 h-3 bg-red-500 rounded-full ml-4 mr-2"></span>
+              赤色：肩のライン（傾斜時）
+            </p>
+            <p className="text-sm text-gray-700 text-center mt-2">
+              <span className="inline-block w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
               黄色：首の傾き角度線（顎→耳の中点）
               <span className="inline-block w-3 h-3 bg-white border border-gray-400 rounded-full ml-4 mr-2"></span>
-              白色：垂直基準線
+              白色：水平・垂直基準線
             </p>
             <p className="text-sm text-gray-700 text-center mt-2">
               <span className="inline-block w-3 h-3 rounded-full mr-2" style={{backgroundColor: '#ff00ff'}}></span>

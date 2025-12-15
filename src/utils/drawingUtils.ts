@@ -180,30 +180,101 @@ export function drawGuideline(
   height: number,
   tiltAngle: number = 0
 ): void {
-  // 傾き角度をラジアンに変換（ellipseの回転パラメータ用）
-  const tiltRad = (tiltAngle * Math.PI) / 180;
-
-  // 顔の位置ガイド（楕円）- 頭頂が画面上部に収まるよう下に配置
   const faceGuideX = width / 2;
-  const faceGuideY = height * 0.40; // 0.3 → 0.40 に変更（下に移動）
-  const faceGuideRadiusX = width * 0.15;
-  const faceGuideRadiusY = height * 0.2;
+  const faceGuideY = height * 0.40;
 
-  // 顔ガイドの影（立体感）- 傾き角度を適用
-  ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
-  ctx.lineWidth = 8;
-  ctx.setLineDash([15, 10]);
-  ctx.beginPath();
-  ctx.ellipse(faceGuideX, faceGuideY + 2, faceGuideRadiusX, faceGuideRadiusY, tiltRad, 0, 2 * Math.PI);
-  ctx.stroke();
+  if (tiltAngle === 0) {
+    // 正面撮影時: 楕円を表示
+    const faceGuideRadiusX = width * 0.15;
+    const faceGuideRadiusY = height * 0.2;
 
-  // 顔ガイド（明るく太く）- 傾き角度を適用
-  ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)'; // シアン色で目立つように
-  ctx.lineWidth = 5;
-  ctx.setLineDash([15, 10]);
-  ctx.beginPath();
-  ctx.ellipse(faceGuideX, faceGuideY, faceGuideRadiusX, faceGuideRadiusY, tiltRad, 0, 2 * Math.PI);
-  ctx.stroke();
+    // 顔ガイドの影（立体感）
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.lineWidth = 8;
+    ctx.setLineDash([15, 10]);
+    ctx.beginPath();
+    ctx.ellipse(faceGuideX, faceGuideY + 2, faceGuideRadiusX, faceGuideRadiusY, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    // 顔ガイド（明るく太く）
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
+    ctx.lineWidth = 5;
+    ctx.setLineDash([15, 10]);
+    ctx.beginPath();
+    ctx.ellipse(faceGuideX, faceGuideY, faceGuideRadiusX, faceGuideRadiusY, 0, 0, 2 * Math.PI);
+    ctx.stroke();
+  } else {
+    // 側屈撮影時: 傾き方向を示す矢印を表示
+    const arrowLength = width * 0.3;
+    const arrowWidth = 60;
+    const tiltRad = (tiltAngle * Math.PI) / 180;
+    
+    // 矢印の終点を計算
+    const arrowEndX = faceGuideX + Math.sin(tiltRad) * arrowLength;
+    const arrowEndY = faceGuideY - Math.cos(tiltRad) * arrowLength;
+
+    ctx.setLineDash([]);
+    
+    // 矢印の影
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+    ctx.lineWidth = 10;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    ctx.beginPath();
+    ctx.moveTo(faceGuideX + 2, faceGuideY + 2);
+    ctx.lineTo(arrowEndX + 2, arrowEndY + 2);
+    ctx.stroke();
+    
+    // 矢印ヘッド（影）
+    ctx.beginPath();
+    ctx.moveTo(arrowEndX + 2, arrowEndY + 2);
+    ctx.lineTo(
+      arrowEndX + 2 - Math.sin(tiltRad + 0.4) * arrowWidth,
+      arrowEndY + 2 + Math.cos(tiltRad + 0.4) * arrowWidth
+    );
+    ctx.lineTo(
+      arrowEndX + 2 - Math.sin(tiltRad - 0.4) * arrowWidth,
+      arrowEndY + 2 + Math.cos(tiltRad - 0.4) * arrowWidth
+    );
+    ctx.closePath();
+    ctx.fill();
+
+    // 矢印本体
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.95)';
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.95)';
+    ctx.lineWidth = 8;
+    
+    ctx.beginPath();
+    ctx.moveTo(faceGuideX, faceGuideY);
+    ctx.lineTo(arrowEndX, arrowEndY);
+    ctx.stroke();
+    
+    // 矢印ヘッド
+    ctx.beginPath();
+    ctx.moveTo(arrowEndX, arrowEndY);
+    ctx.lineTo(
+      arrowEndX - Math.sin(tiltRad + 0.4) * arrowWidth,
+      arrowEndY + Math.cos(tiltRad + 0.4) * arrowWidth
+    );
+    ctx.lineTo(
+      arrowEndX - Math.sin(tiltRad - 0.4) * arrowWidth,
+      arrowEndY + Math.cos(tiltRad - 0.4) * arrowWidth
+    );
+    ctx.closePath();
+    ctx.fill();
+    
+    // テキスト表示（傾ける方向を明示）
+    const directionText = tiltAngle < 0 ? 'この方向に首を傾けてください ←' : 'この方向に首を傾けてください →';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(directionText, faceGuideX + 1, faceGuideY - 51);
+    
+    ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+    ctx.fillText(directionText, faceGuideX, faceGuideY - 50);
+  }
 
   // 肩の位置ガイド（水平線）- 影（画面下から1/3の位置 = 画面上から2/3）
   const shoulderY = height * 0.67; // 画面下から1/3（約67%）の位置に配置
@@ -235,18 +306,28 @@ export function drawGuideline(
 
   ctx.setLineDash([]);
 
-  // ガイドテキスト - 影
+  // 正面撮影時のみ顔ガイドテキストを表示
+  if (tiltAngle === 0) {
+    const faceGuideRadiusY = height * 0.2;
+    
+    // ガイドテキスト - 影
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('顔をここに合わせてください', faceGuideX + 1, faceGuideY - faceGuideRadiusY - 14);
+
+    // ガイドテキスト - メイン
+    ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
+    ctx.font = 'bold 20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('顔をここに合わせてください', faceGuideX, faceGuideY - faceGuideRadiusY - 15);
+  }
+  
+  // 肩ラインテキスト（影）
   ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
   ctx.font = 'bold 20px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText('顔をここに合わせてください', faceGuideX + 1, faceGuideY - faceGuideRadiusY - 14);
   ctx.fillText('肩のラインを水平に保ってください', faceGuideX + 1, shoulderY + 36);
-
-  // ガイドテキスト - メイン
-  ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
-  ctx.font = 'bold 20px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('顔をここに合わせてください', faceGuideX, faceGuideY - faceGuideRadiusY - 15);
   
   // 肩ラインテキストは背景付き
   const shoulderText = '肩のラインを水平に保ってください';

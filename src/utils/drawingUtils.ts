@@ -204,23 +204,27 @@ export function drawGuideline(
     ctx.ellipse(faceGuideX, faceGuideY, faceGuideRadiusX, faceGuideRadiusY, 0, 0, 2 * Math.PI);
     ctx.stroke();
   } else {
-    // 側屈撮影時: 頭の位置から肩の方向への矢印を表示
+    // 側屈撮影時: 耳の位置から肩の方向への矢印を表示
     const arrowWidth = 50;
     
-    // 矢印は頭の位置から始まり、斜め下（肩の方向）に向かう
-    const headY = height * 0.25; // 頭の位置
+    // 耳の位置を推定（顔ガイドの左右端あたり）
+    const earY = height * 0.35; // 耳の高さ（顔ガイドより少し下）
     const shoulderY = height * 0.67; // 肩の位置
-    const arrowStartX = faceGuideX;
-    const arrowStartY = headY;
     
-    // 矢印の長さを計算（頭から肩への距離の約70%）
-    const verticalDistance = shoulderY - headY;
-    const horizontalDistance = width * 0.2;
-    
-    // 矢印の終点（斜め下）
+    // 矢印の起点：傾ける方向の耳の位置
+    const earOffsetX = width * 0.12; // 顔の横幅の半分程度
+    // カメラ鏡像対応：tiltAngle < 0（右側屈）は画面では左に見える
     const direction = tiltAngle < 0 ? -1 : 1;
+    const arrowStartX = faceGuideX + direction * earOffsetX;
+    const arrowStartY = earY;
+    
+    // 矢印の長さを計算（耳から肩への距離の約80%）
+    const verticalDistance = shoulderY - earY;
+    const horizontalDistance = width * 0.15;
+    
+    // 矢印の終点（斜め下、肩の方向）
     const arrowEndX = arrowStartX + direction * horizontalDistance;
-    const arrowEndY = arrowStartY + verticalDistance * 0.7;
+    const arrowEndY = arrowStartY + verticalDistance * 0.8;
 
     ctx.setLineDash([]);
     
@@ -275,15 +279,15 @@ export function drawGuideline(
     ctx.closePath();
     ctx.fill();
     
-    // テキスト表示（矢印の始点上部に表示）
+    // テキスト表示（画面中央上部に表示）
     const directionText = tiltAngle < 0 ? '← この方向に首を傾けて' : 'この方向に首を傾けて →';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(directionText, faceGuideX + 1, headY - 21);
+    ctx.fillText(directionText, faceGuideX + 1, earY - 31);
     
     ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
-    ctx.fillText(directionText, faceGuideX, headY - 20);
+    ctx.fillText(directionText, faceGuideX, earY - 30);
   }
 
   // 肩の位置ガイド（水平線）- 影（画面下から1/3の位置 = 画面上から2/3）

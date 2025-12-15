@@ -129,41 +129,44 @@ export function drawNeckAngleLine(
   height: number,
   angle: number
 ): void {
-  // 肩峰の位置を推定
-  const leftAcromion = estimateAcromion(landmarks, 'left');
-  const rightAcromion = estimateAcromion(landmarks, 'right');
-  const nose = landmarks[POSE_LANDMARKS.NOSE];
+  // 顔のランドマーク取得
+  const leftEar = landmarks[POSE_LANDMARKS.LEFT_EAR];
+  const rightEar = landmarks[POSE_LANDMARKS.RIGHT_EAR];
+  const mouthLeft = landmarks[POSE_LANDMARKS.MOUTH_LEFT];
+  const mouthRight = landmarks[POSE_LANDMARKS.MOUTH_RIGHT];
 
-  if (!leftAcromion || !rightAcromion || !nose) return;
+  if (!leftEar || !rightEar || !mouthLeft || !mouthRight) return;
 
-  // 両肩峰の中点を計算（胸の中心）
-  const chestCenterX = ((leftAcromion.x + rightAcromion.x) / 2) * width;
-  const chestCenterY = ((leftAcromion.y + rightAcromion.y) / 2) * height;
-  const noseX = nose.x * width;
-  const noseY = nose.y * height;
+  // 顎の位置を計算（口の中点）
+  const chinX = ((mouthLeft.x + mouthRight.x) / 2) * width;
+  const chinY = ((mouthLeft.y + mouthRight.y) / 2) * height;
 
-  // 胸の中心から鼻への線を描画
+  // 耳の中点を計算
+  const earCenterX = ((leftEar.x + rightEar.x) / 2) * width;
+  const earCenterY = ((leftEar.y + rightEar.y) / 2) * height;
+
+  // 顎から耳の中点への線を描画（首の角度線）
   ctx.strokeStyle = '#ffff00';
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(chestCenterX, chestCenterY);
-  ctx.lineTo(noseX, noseY);
+  ctx.moveTo(chinX, chinY);
+  ctx.lineTo(earCenterX, earCenterY);
   ctx.stroke();
 
-  // 垂直線を描画（参照用）
+  // 垂直線を描画（参照用）- 顎の位置から上へ
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 2;
   ctx.setLineDash([10, 10]);
   ctx.beginPath();
-  ctx.moveTo(chestCenterX, chestCenterY);
-  ctx.lineTo(chestCenterX, chestCenterY - 100);
+  ctx.moveTo(chinX, chinY);
+  ctx.lineTo(chinX, chinY - 100);
   ctx.stroke();
   ctx.setLineDash([]);
 
   // 角度テキストを描画
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 20px Arial';
-  ctx.fillText(`${angle.toFixed(1)}°`, chestCenterX + 10, chestCenterY - 50);
+  ctx.fillText(`${angle.toFixed(1)}°`, chinX + 10, chinY - 50);
 }
 
 /**

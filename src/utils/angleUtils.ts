@@ -70,102 +70,49 @@ export function calculateShoulderAngle(landmarks: Landmark[]): number {
 
 /**
  * 首の傾き角度を計算
- * 複数の顔のランドマーク（耳、目の中央、鼻、口）の中心線を算出し、
- * 両肩峰の中点（胸の中心）からの角度を計算
+ * 顎の位置を基準として、耳の中点までの角度を計算
  * 
  * @param landmarks - MediaPipeのランドマーク配列
  * @returns 首の傾き角度（度）正の値は右傾き、負の値は左傾き
  */
 export function calculateNeckTiltAngle(landmarks: Landmark[]): number {
-  // 肩峰の位置を推定
-  const leftAcromion = estimateAcromion(landmarks, 'left');
-  const rightAcromion = estimateAcromion(landmarks, 'right');
-  
   // 顔のランドマーク取得
   const leftEar = landmarks[POSE_LANDMARKS.LEFT_EAR];
   const rightEar = landmarks[POSE_LANDMARKS.RIGHT_EAR];
-  const leftEyeInner = landmarks[POSE_LANDMARKS.LEFT_EYE_INNER];
-  const rightEyeInner = landmarks[POSE_LANDMARKS.RIGHT_EYE_INNER];
-  const nose = landmarks[POSE_LANDMARKS.NOSE];
   const mouthLeft = landmarks[POSE_LANDMARKS.MOUTH_LEFT];
   const mouthRight = landmarks[POSE_LANDMARKS.MOUTH_RIGHT];
 
-  if (!leftAcromion || !rightAcromion) {
-    throw new Error('肩峰の検出に失敗しました');
+  // 顎の位置を計算（口の中点）
+  if (!mouthLeft || !mouthRight || 
+      !mouthLeft.visibility || !mouthRight.visibility ||
+      mouthLeft.visibility <= 0.5 || mouthRight.visibility <= 0.5) {
+    throw new Error('顎（口）の検出に失敗しました');
   }
 
-  // 肩峰のランドマークを安定化（精度向上のため）
-  const stabilized = stabilizeShoulders(leftAcromion, rightAcromion);
+  const chinX = (mouthLeft.x + mouthRight.x) / 2;
+  const chinY = (mouthLeft.y + mouthRight.y) / 2;
 
-  // 安定化された両肩峰の中点を計算（胸の中心）
-  const chestCenterX = (stabilized.left.x + stabilized.right.x) / 2;
-  const chestCenterY = (stabilized.left.y + stabilized.right.y) / 2;
-
-  // 顔の中心線を計算（複数のランドマークの中点を使用）
-  const faceCenterPoints: {x: number, y: number, name: string}[] = [];
-  
-  // 耳の中点（頭頂に近い位置を推定）
-  if (leftEar && rightEar && leftEar.visibility && rightEar.visibility && 
-      leftEar.visibility > 0.5 && rightEar.visibility > 0.5) {
-    faceCenterPoints.push({
-      x: (leftEar.x + rightEar.x) / 2,
-      y: (leftEar.y + rightEar.y) / 2,
-      name: 'ears'
-    });
-  }
-  
-  // 目と目の中央（額の位置を推定）
-  if (leftEyeInner && rightEyeInner && 
-      leftEyeInner.visibility && rightEyeInner.visibility &&
-      leftEyeInner.visibility > 0.5 && rightEyeInner.visibility > 0.5) {
-    faceCenterPoints.push({
-      x: (leftEyeInner.x + rightEyeInner.x) / 2,
-      y: (leftEyeInner.y + rightEyeInner.y) / 2,
-      name: 'eye_center'
-    });
-  }
-  
-  // 鼻
-  if (nose && nose.visibility && nose.visibility > 0.5) {
-    faceCenterPoints.push({
-      x: nose.x,
-      y: nose.y,
-      name: 'nose'
-    });
-  }
-  
-  // 口の中点（顎の位置を推定）
-  if (mouthLeft && mouthRight && 
-      mouthLeft.visibility && mouthRight.visibility &&
-      mouthLeft.visibility > 0.5 && mouthRight.visibility > 0.5) {
-    faceCenterPoints.push({
-      x: (mouthLeft.x + mouthRight.x) / 2,
-      y: (mouthLeft.y + mouthRight.y) / 2,
-      name: 'mouth'
-    });
+  // 耳の中点を計算（頭頂部の代表点）
+  if (!leftEar || !rightEar || 
+      !leftEar.visibility || !rightEar.visibility ||
+      leftEar.visibility <= 0.5 || rightEar.visibility <= 0.5) {
+    throw new Error('耳の検出に失敗しました');
   }
 
-  if (faceCenterPoints.length === 0) {
-    throw new Error('顔の中心を計算するためのランドマークが検出されませんでした');
-  }
+  const earCenterX = (leftEar.x + rightEar.x) / 2;
+  const earCenterY = (leftEar.y + rightEar.y) / 2;
 
-  // 全ての顔中心点の平均を計算（より安定した中心線）
-  const faceCenterX = faceCenterPoints.reduce((sum, p) => sum + p.x, 0) / faceCenterPoints.length;
-  const faceCenterY = faceCenterPoints.reduce((sum, p) => sum + p.y, 0) / faceCenterPoints.length;
-
-  // 胸の中心から顔の中心へのベクトルと垂直線のなす角を計算
-  const dx = faceCenterX - chestCenterX;
-  const dy = chestCenterY - faceCenterY; // Y軸は下向きなので反転
+  // 顎から耳の中点へのベクトルと垂直線のなす角を計算
+  const dx = earCenterX - chinX;
+  const dy = chinY - earCenterY; // Y軸は下向きなので反転（耳は顎より上）
 
   // atan2を使用して角度を計算（垂直線からの傾き）
   const radians = Math.atan2(dx, dy);
   const degrees = radians * (180 / Math.PI);
 
   console.log('Neck tilt angle calculation:', {
-    usedLandmarks: faceCenterPoints.map(p => p.name).join(', '),
-    pointCount: faceCenterPoints.length,
-    chestCenter: { x: chestCenterX.toFixed(3), y: chestCenterY.toFixed(3) },
-    faceCenter: { x: faceCenterX.toFixed(3), y: faceCenterY.toFixed(3) },
+    chin: { x: chinX.toFixed(3), y: chinY.toFixed(3) },
+    earCenter: { x: earCenterX.toFixed(3), y: earCenterY.toFixed(3) },
     dx: dx.toFixed(4), 
     dy: dy.toFixed(4),
     degrees: degrees.toFixed(2) + '°'

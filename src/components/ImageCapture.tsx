@@ -55,11 +55,12 @@ export const ImageCapture: React.FC<ImageCaptureProps> = ({
       canvas.height = video.videoHeight;
 
       // 画像タイプに応じて傾き角度を設定
+      // カメラは鏡像なので、右側屈時は左に傾け、左側屈時は右に傾ける
       let tiltAngle = 0;
       if (imageType === ImageType.RIGHT_TILT) {
-        tiltAngle = 15; // 右に15度傾ける
+        tiltAngle = -15; // 右側屈（カメラでは左に見える）→ ガイドを左に15度傾ける
       } else if (imageType === ImageType.LEFT_TILT) {
-        tiltAngle = -15; // 左に15度傾ける
+        tiltAngle = 15; // 左側屈（カメラでは右に見える）→ ガイドを右に15度傾ける
       }
 
       drawGuideline(ctx, canvas.width, canvas.height, tiltAngle);

@@ -204,20 +204,25 @@ export function drawGuideline(
     ctx.ellipse(faceGuideX, faceGuideY, faceGuideRadiusX, faceGuideRadiusY, 0, 0, 2 * Math.PI);
     ctx.stroke();
   } else {
-    // 側屈撮影時: 傾き方向を示す矢印を表示（水平方向）
-    const arrowLength = width * 0.25;
+    // 側屈撮影時: 頭の位置から肩の方向への矢印を表示
     const arrowWidth = 50;
     
-    // 矢印は肩の高さで水平方向に表示（耳が肩に近づく動作を示す）
-    const arrowY = height * 0.67; // 肩ガイドと同じ高さ
+    // 矢印は頭の位置から始まり、斜め下（肩の方向）に向かう
+    const headY = height * 0.25; // 頭の位置
+    const shoulderY = height * 0.67; // 肩の位置
     const arrowStartX = faceGuideX;
-    const arrowEndX = faceGuideX + (tiltAngle < 0 ? -arrowLength : arrowLength);
-    const arrowEndY = arrowY;
+    const arrowStartY = headY;
+    
+    // 矢印の長さを計算（頭から肩への距離の約70%）
+    const verticalDistance = shoulderY - headY;
+    const horizontalDistance = width * 0.2;
+    
+    // 矢印の終点（斜め下）
+    const direction = tiltAngle < 0 ? -1 : 1;
+    const arrowEndX = arrowStartX + direction * horizontalDistance;
+    const arrowEndY = arrowStartY + verticalDistance * 0.7;
 
     ctx.setLineDash([]);
-    
-    // 矢印の方向（左向きか右向きか）
-    const direction = tiltAngle < 0 ? -1 : 1;
     
     // 矢印の影
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)';
@@ -227,15 +232,22 @@ export function drawGuideline(
     ctx.lineJoin = 'round';
     
     ctx.beginPath();
-    ctx.moveTo(arrowStartX + 2, arrowY + 2);
+    ctx.moveTo(arrowStartX + 2, arrowStartY + 2);
     ctx.lineTo(arrowEndX + 2, arrowEndY + 2);
     ctx.stroke();
     
-    // 矢印ヘッド（影）- 水平方向の三角形
+    // 矢印ヘッド（影）- 斜め方向の三角形
+    const angle = Math.atan2(arrowEndY - arrowStartY, arrowEndX - arrowStartX);
     ctx.beginPath();
     ctx.moveTo(arrowEndX + 2, arrowEndY + 2);
-    ctx.lineTo(arrowEndX + 2 - direction * arrowWidth, arrowEndY + 2 - arrowWidth * 0.6);
-    ctx.lineTo(arrowEndX + 2 - direction * arrowWidth, arrowEndY + 2 + arrowWidth * 0.6);
+    ctx.lineTo(
+      arrowEndX + 2 - Math.cos(angle - 0.4) * arrowWidth,
+      arrowEndY + 2 - Math.sin(angle - 0.4) * arrowWidth
+    );
+    ctx.lineTo(
+      arrowEndX + 2 - Math.cos(angle + 0.4) * arrowWidth,
+      arrowEndY + 2 - Math.sin(angle + 0.4) * arrowWidth
+    );
     ctx.closePath();
     ctx.fill();
 
@@ -245,27 +257,33 @@ export function drawGuideline(
     ctx.lineWidth = 10;
     
     ctx.beginPath();
-    ctx.moveTo(arrowStartX, arrowY);
+    ctx.moveTo(arrowStartX, arrowStartY);
     ctx.lineTo(arrowEndX, arrowEndY);
     ctx.stroke();
     
-    // 矢印ヘッド - 水平方向の三角形
+    // 矢印ヘッド - 斜め方向の三角形
     ctx.beginPath();
     ctx.moveTo(arrowEndX, arrowEndY);
-    ctx.lineTo(arrowEndX - direction * arrowWidth, arrowEndY - arrowWidth * 0.6);
-    ctx.lineTo(arrowEndX - direction * arrowWidth, arrowEndY + arrowWidth * 0.6);
+    ctx.lineTo(
+      arrowEndX - Math.cos(angle - 0.4) * arrowWidth,
+      arrowEndY - Math.sin(angle - 0.4) * arrowWidth
+    );
+    ctx.lineTo(
+      arrowEndX - Math.cos(angle + 0.4) * arrowWidth,
+      arrowEndY - Math.sin(angle + 0.4) * arrowWidth
+    );
     ctx.closePath();
     ctx.fill();
     
-    // テキスト表示（矢印の上に表示）
-    const directionText = tiltAngle < 0 ? '← この方向に首を傾けてください' : 'この方向に首を傾けてください →';
+    // テキスト表示（矢印の始点上部に表示）
+    const directionText = tiltAngle < 0 ? '← この方向に首を傾けて' : 'この方向に首を傾けて →';
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.font = 'bold 22px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(directionText, faceGuideX + 1, arrowY - 41);
+    ctx.fillText(directionText, faceGuideX + 1, headY - 21);
     
     ctx.fillStyle = 'rgba(255, 255, 255, 1.0)';
-    ctx.fillText(directionText, faceGuideX, arrowY - 40);
+    ctx.fillText(directionText, faceGuideX, headY - 20);
   }
 
   // 肩の位置ガイド（水平線）- 影（画面下から1/3の位置 = 画面上から2/3）
